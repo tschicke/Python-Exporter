@@ -1,5 +1,5 @@
 import os
-clear = lambda: os.system('clear')
+clear = lambda: os.system('cls')
 
 
 import bpy
@@ -7,6 +7,7 @@ import bpy
 mesh = bpy.data.objects['Cube'].data
 
 def printFunc():
+    bpy.ops.object.mode_set(mode='OBJECT')
     clear()
     mesh.calc_tessface()
     
@@ -51,9 +52,6 @@ def printFunc():
     for v in mesh.vertices:
         vertices.append(v.co)
         normals.append(v.normal)
-    #Populate UVs
-    #for uv in mesh.uv_layers.active.data:
-    #    UVs.append(uv.uv)
     
     print("%i %i %i" % (len(vertices), len(UVs), len(normals)))
     
