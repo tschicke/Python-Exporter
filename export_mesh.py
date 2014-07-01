@@ -8,38 +8,68 @@ def save(operator, context, filepath=""):
         mesh = object.data
         mesh.calc_tessface()
         
-        vertexList = mesh.vertices
-        uvList = mesh.uv_layers.active.data
-        indexList = mesh.tessfaces
+        vertices = []
+        UVs = []
+        normals = []
         
-        writeVertexList = vertexList
-        writeUVList = uvList
-        writeNormalList = []
-        writeIndexList = []
+        indices = []
         
-        for i in indexList:
-            if(len(i.vertices) == 3):
-                writeIndexList.append(i.vertices[:])
+        indexOffset = 0
+        for face in mesh.tessfaces:
+            tempIndices = []
+            for i in range(0, len(face.vertices)):
+                index = face.vertices[i]
+                blenderVertex = mesh.vertices[index].co[:]
+                outVertex = (blenderVertex[0], blenderVertex[2], blenderVertex[1])
+                UV = mesh.tessface_uv_textures.active.data[face.index].uv[i][:]
+                if face.use_smooth:
+                    normal = mesh.vertices[index].normal[:]
+                else:
+                    normal = face.normal[:]
+                
+                dupIndex = -1
+                for j in range(0, len(vertices)):
+                    tempVert = vertices[j]
+                    tempUV = UVs[j]
+                    tempNormal = normals[j]
+                    
+                    if outVertex == tempVert and UV == tempUV and normal == tempNormal:
+                        #Duplicate Found
+                        dupIndex = j
+                        break
+                if dupIndex != -1:
+                    #Duplicate Found
+                    print("dup")
+                    tempIndices.append(dupIndex)
+                else:
+                    vertices.append(outVertex)
+                    UVs.append(UV)
+                    normals.append(normal)
+                    tempIndices.append(indexOffset)
+                    indexOffset += 1
+                
+            if len(tempIndices) == 4:
+                indices.append((tempIndices[0], tempIndices[3], tempIndices[2]))
+                indices.append((tempIndices[0], tempIndices[2], tempIndices[1]))
             else:
-                writeIndexList.append((i.vertices[0], i.vertices[1], i.vertices[2]))
-                writeIndexList.append((i.vertices[2], i.vertices[3], i.vertices[0]))
-        
+                indices.append((tempIndices[0], tempIndices[2], tempIndices[1]))
+            
         file = open(filepath, 'w')
         fw = file.write
         fw("gmdl\n")
-        fw("%i %i\n" % (len(vertexList), len(writeIndexList) * 3))
+        fw("%i %i\n" % (len(vertices), len(indices) * 3))
         
-        for v in vertexList:
-            fw("v %.4f %.4f %.4f\n" % v.co[:])
+        for v in vertices:
+            fw("v %f %f %f\n" % v[:])
         
-        for d in uvList:
-            fw("t %.4f %.4f\n" % d.uv[:])
+        for uv in UVs:
+            fw("t %f %f\n" % uv[:])
             
-        for v in vertexList:
-            fw("n %.4f %.4f %.4f\n" % v.normal[:])
-            
-        for i in writeIndexList:
-            fw("i %i %i %i\n" % i)
+        for n in normals:
+            fw("n %f %f %f\n" % n[:])
+        
+        for i in indices:
+            fw("i %i %i %i\n" % i[:])
         
         file.close
     

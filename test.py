@@ -64,7 +64,60 @@ def printFunc():
     for n in normals:
         print("n %.6f %.6f %.6f" % (n[0], n[1], n[2]))
     
-printFunc()
+    
+def testExport():
+    bpy.ops.object.mode_set(mode='OBJECT')
+    clear()
+    mesh.calc_tessface()
+    
+    vertices = []
+    UVs = []
+    normals = []
+    
+    indices = []
+    
+    for face in mesh.tessfaces:
+        tempIndices = face.vertices
+        for i in range(0, len(tempIndices)):
+            index = tempIndices[i]
+            vertex = mesh.vertices[index].co[:]
+            UV = mesh.tessface_uv_textures.active.data[face.index].uv[i][:]
+            if face.use_smooth:
+                normal = mesh.vertices[index].normal[:]
+            else:
+                normal = face.normal[:]
+            
+            dupIndex = -1
+            for j in range(0, len(vertices)):
+                tempVert = vertices[j]
+                tempUV = UVs[j]
+                tempNormal = normals[j]
+                
+                if vertex == tempVert and UV == tempUV and normal == tempNormal:
+                    #Duplicate Found
+                    dupIndex = j
+                    break
+            if dupIndex != -1:
+                #Duplicate Found
+                tempIndices[i] = dupIndex
+            else:
+                vertices.append(vertex)
+                UVs.append(UV)
+                normals.append(normal)
+            
+        if len(tempIndices) == 4:
+            indices.append((tempIndices[0], tempIndices[1], tempIndices[2]))
+            indices.append((tempIndices[2], tempIndices[3], tempIndices[0]))
+        else:
+            indices.append(tempIndices[:])
+    
+    print(len(vertices))
+    print(len(UVs))
+    print(len(normals))
+    print(len(indices) * 3)
+    
+testExport()
+#printFunc()
 '''
 clear()
 mesh.calc_tessface()
