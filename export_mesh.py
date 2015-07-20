@@ -20,7 +20,7 @@ def save(operator, context, filepath=""):
             for i in range(0, len(face.vertices)):
                 index = face.vertices[i]
                 blenderVertex = mesh.vertices[index].co[:]
-                outVertex = (blenderVertex[0], blenderVertex[2], blenderVertex[1])
+                outVertex = (blenderVertex[0], blenderVertex[2], -blenderVertex[1])
                 UV = mesh.tessface_uv_textures.active.data[face.index].uv[i][:]
                 if face.use_smooth:
                     normal = mesh.vertices[index].normal[:]
@@ -58,6 +58,7 @@ def save(operator, context, filepath=""):
         fw = file.write
         fw("gmdl\n")
         fw("%i %i\n" % (len(vertices), len(indices) * 3))
+        fw("1\n")#This is whether or not the mesh is textured
         
         for v in vertices:
             fw("v %f %f %f\n" % v[:])
